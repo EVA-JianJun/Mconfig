@@ -314,6 +314,11 @@ class ModifyClass():
                         self._import(spec, source)
                         # update
                         self._config_file_modify_time = os.stat(self._config_file).st_mtime
+                    except SyntaxError as err:
+                        print("\033[0;36;41mReload config SyntaxError:\033[0m")
+                        traceback.print_exc()
+                        print(err)
+                        self._config_file_modify_time = os.stat(self._config_file).st_mtime
                     finally:
                         self._setattr_lock.release()
 
