@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
+"""
+Version 0.8.5
+"""
 
 class MyModuleCall(sys.modules[__name__].__class__):
     # module call
