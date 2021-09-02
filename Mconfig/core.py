@@ -37,7 +37,12 @@ class ModifyClass():
         self._config_file = config_file
         self._module_name = config_file.replace(".py", "")
 
-        self._setattr_lock = threading.RLock()
+        try:
+            self._setattr_lock = sys.modules["Mconfig_Lock"][self._config_file]
+        except KeyError:
+            lock = threading.RLock()
+            sys.modules["Mconfig_Lock"][self._config_file] = lock
+            self._setattr_lock = lock
 
     def _wapper_class(self, source: str) -> str:
         """ overwrite class """
@@ -147,7 +152,10 @@ class ModifyClass():
                     new_source += "{0} = {1}\n\n".format(key, value.__repr__())
 
         # format
-        new_source = yapf.yapf_api.FormatCode(new_source)[0]
+        try:
+            new_source = yapf.yapf_api.FormatCode(new_source)[0]
+        except Exception as err:
+            raise err("Format Error! Please contact the author to submit this bug.")
 
         # print(new_source)
 
@@ -273,7 +281,10 @@ class ModifyClass():
                     new_source += "{0} = {1}\n\n".format(key, value.__repr__())
 
         # format
-        new_source = yapf.yapf_api.FormatCode(new_source)[0]
+        try:
+            new_source = yapf.yapf_api.FormatCode(new_source)[0]
+        except Exception as err:
+            raise err("Format Error! Please contact the author to submit this bug.")
 
         # print(new_source)
 
