@@ -1,0 +1,168 @@
+# -*- coding: utf-8 -*-
+import re
+import sys
+import threading
+import importlib
+import traceback
+from datetime import datetime
+from Mconfig import yapf
+
+FIND_CLASS_PATTON = re.compile("class\s+((.+?)\([object]*\)):")
+FIND_CLASS_NAME_PATTON = re.compile("class\s+(.+?)\([object]*\):")
+FIND_VARIABLE_PATTON = re.compile("(.+)?\s+=")
+
+class MconfigClass(object):
+
+    _WHITELIST = ["WHITELIST", "_modify_core"]
+
+    def __setattr__(self, attr: str, value) -> None:
+        if attr in self._WHITELIST:
+            # this class variable
+            return super().__setattr__(attr, value)
+        else:
+            # config variable
+            self._modify_core._setattr(attr, value, self.__class__.__name__)
+
+class ModifyClass():
+    """ Modify config and Save config """
+
+    def __init__(self, config_file: str) -> None:
+        self._config_file = config_file
+        self._module_name = config_file.replace(".py", "")
+
+        self._setattr_lock = threading.RLock()
+
+    def _wapper_class(self, source: str) -> str:
+        """ overwrite class """
+        class_list = FIND_CLASS_PATTON.findall(source)
+        for replace_str, class_name in class_list:
+            source = source.replace(replace_str, "{0}(MconfigClass)".format(class_name))
+        s_part_1, s_part_2 = source.split('\n', 1)
+        source = s_part_1 + "\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "del MconfigClass"
+        return source
+
+    def _setattr(self,  attr: str, value, modify_class_name=None) -> None:
+        """ modify & import """
+        self._setattr_lock.acquire()
+        try:
+            print("set:", attr, "value:", value, "modify_class_name:", modify_class_name)
+            spec, source = self._get_source_code()
+            new_source = self._modify(source, attr, value, modify_class_name)
+            self._import(spec, new_source)
+        finally:
+            self._setattr_lock.release()
+
+    def _modify(self, source: str, attr: str, value, modify_class_name: str) -> str:
+
+        # load module
+        module = sys.modules[self._module_name]
+
+        variable_list = []
+        class_dict = {}
+        for line in  source.split('\n'):
+            # find annotation
+            if line.startswith('#') and not line.startswith('# Create Time:'):
+                variable_list.append(line)
+
+            # find class
+            class_name_list = FIND_CLASS_NAME_PATTON.findall(line)
+            if class_name_list:
+                class_name = class_name_list[0]
+                variable_list.append(class_name)
+                class_dict[class_name] = []
+
+            # find veriable
+            veriable_lsit = FIND_VARIABLE_PATTON.findall(line)
+            if veriable_lsit:
+                variable_name = veriable_lsit[0]
+
+                variable_name_strip = variable_name.strip()
+                if len(variable_name_strip) < len(variable_name):
+                    # class variable
+                    if modify_class_name == class_name and attr == variable_name_strip:
+                        class_dict[class_name].append({
+                                attr : value
+                            })
+                    else:
+                        class_dict[class_name].append({
+                                variable_name_strip : eval("module.{0}.{1}".format(class_name, variable_name_strip))
+                            })
+                else:
+                    # normal variable
+                    if attr == variable_name:
+                        variable_list.append({
+                            attr : value
+                        })
+                    else:
+                        variable_list.append({
+                            variable_name : eval("module.{0}".format(variable_name))
+                        })
+
+        new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        for variable in variable_list:
+            if isinstance(variable, str):
+                if variable.startswith('#'):
+                    new_source += variable + '\n'
+                else:
+                    # class
+                    class_name = variable
+                    class_variable_list = class_dict[class_name]
+                    class_code = "class {0}():\n\n".format(class_name)
+                    for variable_dict in class_variable_list:
+                        for key, value in variable_dict.items():
+                            class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+
+                    new_source += class_code
+
+            elif isinstance(variable, dict):
+                for key, value in variable.items():
+                    new_source += "{0} = {1}\n\n".format(key, value.__repr__())
+
+        # format
+        new_source = yapf.yapf_api.FormatCode(new_source)[0]
+
+        # print(new_source)
+
+        return new_source
+
+    def _import(self, spec, source):
+
+        try:
+            # overwrite class
+            overwrite_source = self._wapper_class(source)
+
+            # import
+            module = importlib.util.module_from_spec(spec)
+            codeobj = compile(overwrite_source, module.__spec__.origin, 'exec')
+            exec(codeobj, module.__dict__)
+
+            # init class
+            for verable_str in dir(module):
+                if not verable_str.startswith('_'):
+                    verable = eval("module.{0}".format(verable_str))
+                    if isinstance(verable, type):
+                        exec("module.{0} = verable()".format(verable_str))
+                        exec("module.{0}._modify_core = self".format(verable_str))
+
+            # save
+            sys.modules[self._module_name] = module
+
+            # save file
+            with open(self._config_file, 'w') as fw:
+                fw.write(source)
+
+        except Exception as err:
+            print("Compilation failed! Please contact the author to submit this bug.")
+            traceback.print_exc()
+            print(err)
+            raise err
+
+    def _get_source_code(self):
+
+        spec = importlib.util.find_spec(self._module_name)
+        source = spec.loader.get_source(self._module_name)
+
+        return spec, source
+
+
+    # TODO 检测文件修改并读入
