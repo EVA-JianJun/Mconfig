@@ -17,6 +17,7 @@ class MconfigClass(object):
     _WHITELIST = ["WHITELIST", "_modify_core"]
 
     def __setattr__(self, attr: str, value) -> None:
+        """ set & modify"""
         if attr in self._WHITELIST:
             # this class variable
             return super().__setattr__(attr, value)
@@ -24,10 +25,15 @@ class MconfigClass(object):
             # config variable
             self._modify_core._setattr(attr, value, self.__class__.__name__)
 
+    def __delattr__(self, name: str) -> None:
+        """ del """
+        self._modify_core._delattr(name, self.__class__.__name__)
+
 class ModifyClass():
     """ Modify config and Save config """
 
     def __init__(self, config_file: str) -> None:
+
         self._config_file = config_file
         self._module_name = config_file.replace(".py", "")
 
@@ -186,5 +192,91 @@ class ModifyClass():
 
         return spec, source
 
+    def _delattr(self, attr: str, del_class_name=None) -> None:
+        """ del """
+        self._setattr_lock.acquire()
+        try:
+            print("del:", attr, "del_class_name:", del_class_name)
+            spec, source = self._get_source_code()
+            new_source = self._del_source(source, attr, del_class_name)
+            self._import(spec, new_source)
+        finally:
+            self._setattr_lock.release()
+
+    def _del_source(self, source: str, attr: str, del_class_name: str) -> str:
+        """ del source """
+        # load module
+        module = sys.modules[self._module_name]
+
+        variable_list = []
+        class_dict = {}
+        for line in  source.split('\n'):
+            # find annotation
+            if line.startswith('#') and not line.startswith('# Create Time:'):
+                variable_list.append(line)
+
+            # find class
+            class_name_list = FIND_CLASS_NAME_LINE_PATTON.findall(line)
+            if class_name_list:
+                class_name = class_name_list[0]
+                if attr == class_name:
+                    # del class
+                    pass
+                else:
+                    variable_list.append(class_name)
+                class_dict[class_name] = []
+
+            # find veriable
+            veriable_lsit = FIND_VARIABLE_PATTON.findall(line)
+            if veriable_lsit:
+                variable_name = veriable_lsit[0]
+
+                variable_name_strip = variable_name.strip()
+                if len(variable_name_strip) < len(variable_name):
+                    # class variable
+                    if del_class_name != class_name:
+                        # not need del class variable
+                        class_dict[class_name].append({
+                                variable_name_strip : eval("module.{0}.{1}".format(class_name, variable_name_strip))
+                            })
+                    else:
+                        # is this class variable
+                        if not attr == variable_name_strip:
+                            class_dict[class_name].append({
+                                    variable_name_strip : eval("module.{0}.{1}".format(class_name, variable_name_strip))
+                                })
+                else:
+                    # normal variable
+                    if not attr == variable_name:
+                        variable_list.append({
+                            variable_name : eval("module.{0}".format(variable_name))
+                        })
+
+        new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        for variable in variable_list:
+            if isinstance(variable, str):
+                if variable.startswith('#'):
+                    new_source += variable + '\n'
+                else:
+                    # class
+                    class_name = variable
+                    class_variable_list = class_dict[class_name]
+                    class_code = "class {0}():\n\n".format(class_name)
+                    for variable_dict in class_variable_list:
+                        for key, value in variable_dict.items():
+                            class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+
+                    new_source += class_code
+
+            elif isinstance(variable, dict):
+                for key, value in variable.items():
+                    new_source += "{0} = {1}\n\n".format(key, value.__repr__())
+
+        # format
+        new_source = yapf.yapf_api.FormatCode(new_source)[0]
+
+        # print(new_source)
+
+        return new_source
 
     # TODO 检测文件修改并读入

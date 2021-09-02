@@ -48,17 +48,22 @@ class ConfigManage(object):
             traceback.print_exc()
 
     def __dir__(self):
-        # self.
+        """ self. """
         return sys.modules[self._file_name].__dir__()
 
     def __getattr__(self, attr: str):
-        # redirect
+        """ redirect """
         return eval("sys.modules[self._file_name].{0}".format(attr))
 
     def __setattr__(self, attr: str, value) -> None:
+        """ set & modify"""
         if attr in self.WHITELIST:
             # this class variable
             return super().__setattr__(attr, value)
         else:
             # config variable
             self._modify_core._setattr(attr, value)
+
+    def __delattr__(self, attr: str) -> None:
+        """ del """
+        self._modify_core._delattr(attr)
