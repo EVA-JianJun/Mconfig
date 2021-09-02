@@ -7,8 +7,9 @@ import traceback
 from datetime import datetime
 from Mconfig import yapf
 
-FIND_CLASS_PATTON = re.compile("class\s+((.+?)\([object]*\)):")
-FIND_CLASS_NAME_PATTON = re.compile("class\s+(.+?)\([object]*\):")
+FIND_CLASS_PATTON = re.compile("\nclass\s+((.+?)\([object]*\)):")
+FIND_CLASS_NAME_PATTON = re.compile("\nclass\s+(.+?)\([object]*\):")
+FIND_CLASS_NAME_LINE_PATTON = re.compile("class\s+(.+?)\([object]*\):")
 FIND_VARIABLE_PATTON = re.compile("(.+)?\s+=")
 
 class MconfigClass(object):
@@ -53,19 +54,22 @@ class ModifyClass():
             self._setattr_lock.release()
 
     def _modify(self, source: str, attr: str, value, modify_class_name: str) -> str:
+        """ modify config """
+        all_class_name_list = FIND_CLASS_NAME_PATTON.findall(source)
 
         # load module
         module = sys.modules[self._module_name]
 
         variable_list = []
         class_dict = {}
+        modify_flag = False
         for line in  source.split('\n'):
             # find annotation
             if line.startswith('#') and not line.startswith('# Create Time:'):
                 variable_list.append(line)
 
             # find class
-            class_name_list = FIND_CLASS_NAME_PATTON.findall(line)
+            class_name_list = FIND_CLASS_NAME_LINE_PATTON.findall(line)
             if class_name_list:
                 class_name = class_name_list[0]
                 variable_list.append(class_name)
@@ -83,20 +87,38 @@ class ModifyClass():
                         class_dict[class_name].append({
                                 attr : value
                             })
+                        modify_flag = True
                     else:
                         class_dict[class_name].append({
                                 variable_name_strip : eval("module.{0}.{1}".format(class_name, variable_name_strip))
                             })
                 else:
                     # normal variable
-                    if attr == variable_name:
+                    if attr == variable_name and not modify_class_name:
                         variable_list.append({
                             attr : value
                         })
+                        modify_flag = True
                     else:
                         variable_list.append({
                             variable_name : eval("module.{0}".format(variable_name))
                         })
+
+        if not modify_flag:
+            # add variable
+            if modify_class_name:
+                # class variable
+                class_dict[modify_class_name].append({
+                        attr : value
+                    })
+            else:
+                # normal variable
+                if attr in all_class_name_list:
+                    raise NameError("The variable name is the same as the class name! {0}".format(attr))
+
+                variable_list.append({
+                    attr : value
+                })
 
         new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         for variable in variable_list:
