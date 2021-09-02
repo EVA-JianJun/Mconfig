@@ -9,6 +9,6 @@ class MyModuleCall(sys.modules[__name__].__class__):
 
 sys.modules[__name__].__class__ = MyModuleCall
 
-sys.modules["Mconfig_Lock"] = dict()
+sys.modules["Mconfig_Context"] = dict()
 
 del sys, MyModuleCall

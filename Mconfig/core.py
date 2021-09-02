@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
 import re
 import sys
+import time
 import threading
 import importlib
 import traceback
@@ -37,12 +39,17 @@ class ModifyClass():
         self._config_file = config_file
         self._module_name = config_file.replace(".py", "")
 
+        self._config_file_modify_time = os.stat(self._config_file).st_mtime
+
         try:
-            self._setattr_lock = sys.modules["Mconfig_Lock"][self._config_file]
+            self._setattr_lock = sys.modules["Mconfig_Context"][self._config_file]
         except KeyError:
             lock = threading.RLock()
-            sys.modules["Mconfig_Lock"][self._config_file] = lock
+            sys.modules["Mconfig_Context"][self._config_file] = lock
             self._setattr_lock = lock
+
+        # start daemon
+        self._config_load_daemon_server()
 
     def _wapper_class(self, source: str) -> str:
         """ overwrite class """
@@ -57,6 +64,7 @@ class ModifyClass():
         """ modify & import """
         self._setattr_lock.acquire()
         try:
+            # DEBUG
             print("set:", attr, "value:", value, "modify_class_name:", modify_class_name)
             spec, source = self._get_source_code()
             new_source = self._modify(source, attr, value, modify_class_name)
@@ -204,6 +212,7 @@ class ModifyClass():
         """ del """
         self._setattr_lock.acquire()
         try:
+            # DEBUG
             print("del:", attr, "del_class_name:", del_class_name)
             spec, source = self._get_source_code()
             new_source = self._del_source(source, attr, del_class_name)
@@ -290,4 +299,37 @@ class ModifyClass():
 
         return new_source
 
-    # TODO 检测文件修改并读入
+    def _config_load_daemon_server(self):
+        """ Configure and modify the daemon service """
+        def sub():
+            while True:
+                time.sleep(5)
+                if os.stat(self._config_file).st_mtime != self._config_file_modify_time:
+                    # reload
+                    # DEBUG
+                    self._setattr_lock.acquire()
+                    try:
+                        print("{0} Reload config: {1}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self._config_file))
+                        spec, source = self._get_source_code()
+                        self._import(spec, source)
+                        # update
+                        self._config_file_modify_time = os.stat(self._config_file).st_mtime
+                    finally:
+                        self._setattr_lock.release()
+
+        self._setattr_lock.acquire()
+        try:
+            try:
+                run_flag = sys.modules["Mconfig_Context"]["daemon_th"]
+            except KeyError:
+                run_flag = False
+
+            if not run_flag:
+                # DEBUG
+                print("daemon run..")
+                daemon_th = threading.Thread(target=sub, name='LoopThread')
+                daemon_th.setDaemon(True)
+                daemon_th.start()
+                sys.modules["Mconfig_Context"]["daemon_th"] = True
+        finally:
+            self._setattr_lock.release()
