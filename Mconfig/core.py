@@ -65,7 +65,7 @@ class ModifyClass():
         self._setattr_lock.acquire()
         try:
             # DEBUG
-            print("set:", attr, "value:", value, "modify_class_name:", modify_class_name)
+            # print("set:", attr, "value:", value, "modify_class_name:", modify_class_name)
             spec, source = self._get_source_code()
             new_source = self._modify(source, attr, value, modify_class_name)
             self._import(spec, new_source)
@@ -213,7 +213,7 @@ class ModifyClass():
         self._setattr_lock.acquire()
         try:
             # DEBUG
-            print("del:", attr, "del_class_name:", del_class_name)
+            # print("del:", attr, "del_class_name:", del_class_name)
             spec, source = self._get_source_code()
             new_source = self._del_source(source, attr, del_class_name)
             self._import(spec, new_source)
@@ -331,7 +331,7 @@ class ModifyClass():
 
             if not run_flag:
                 # DEBUG
-                print("daemon run..")
+                # print("daemon run..")
                 daemon_th = threading.Thread(target=sub, name='LoopThread')
                 daemon_th.setDaemon(True)
                 daemon_th.start()
