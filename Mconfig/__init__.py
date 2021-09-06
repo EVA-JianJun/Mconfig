@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
-"""
-Version 0.8.6
-"""
-__version__ = "0.8.6"
+
+__version__ = "0.8.7"
 
 class MyModuleCall(sys.modules[__name__].__class__):
     # module call

@@ -14,6 +14,8 @@ FIND_CLASS_NAME_PATTON = re.compile("\nclass\s+(.+?)\([object]*\):")
 FIND_CLASS_NAME_LINE_PATTON = re.compile("class\s+(.+?)\([object]*\):")
 FIND_VARIABLE_PATTON = re.compile("(.+)?\s+=")
 
+CLASS_SET = {int, float, str, bool, list, tuple, dict}
+
 class MconfigClass(object):
 
     _WHITELIST = ["WHITELIST", "_modify_core"]
@@ -103,9 +105,14 @@ class ModifyClass():
                 if len(variable_name_strip) < len(variable_name):
                     # class variable
                     if modify_class_name == class_name and attr == variable_name_strip:
-                        class_dict[class_name].append({
-                                attr : value
-                            })
+
+                        if type(value) in CLASS_SET:
+                            class_dict[class_name].append({
+                                    attr : value
+                                })
+                        else:
+                            raise ValueError("Class nesting is not supported!")
+
                         modify_flag = True
                     else:
                         class_dict[class_name].append({
@@ -114,9 +121,23 @@ class ModifyClass():
                 else:
                     # normal variable
                     if attr == variable_name and not modify_class_name:
-                        variable_list.append({
-                            attr : value
-                        })
+                        if type(value) in CLASS_SET:
+                            variable_list.append({
+                                attr : value
+                            })
+                        else:
+                            # add name
+                            variable_list.append(attr)
+                            # add class_dict
+                            class_dict[attr] = []
+                            for variable_name in dir(value):
+                                if not variable_name.startswith('_'):
+                                    get_class_variable_value = eval("value.{0}".format(variable_name))
+                                    if type(get_class_variable_value) in CLASS_SET:
+                                        class_dict[attr].append({
+                                                variable_name : get_class_variable_value
+                                        })
+
                         modify_flag = True
                     else:
                         variable_list.append({
@@ -127,17 +148,44 @@ class ModifyClass():
             # add variable
             if modify_class_name:
                 # class variable
-                class_dict[modify_class_name].append({
-                        attr : value
-                    })
+                if type(value) in CLASS_SET:
+                    class_dict[modify_class_name].append({
+                            attr : value
+                        })
+                else:
+                    raise ValueError("Class nesting is not supported!")
             else:
                 # normal variable
                 if attr in all_class_name_list:
-                    raise NameError("The variable name is the same as the class name! {0}".format(attr))
-
-                variable_list.append({
-                    attr : value
-                })
+                    if type(value) in CLASS_SET:
+                        # is class name and value is normal type
+                        raise NameError("The variable name is the same as the class name! {0}".format(attr))
+                    else:
+                        # overwrite old class
+                        class_dict[attr] = []
+                        for variable_name in dir(value):
+                            if not variable_name.startswith('_'):
+                                get_class_variable_value = eval("value.{0}".format(variable_name))
+                                if type(get_class_variable_value) in CLASS_SET:
+                                    class_dict[attr].append({
+                                            variable_name : get_class_variable_value
+                                    })
+                else:
+                    if type(value) in CLASS_SET:
+                        variable_list.append({
+                            attr : value
+                        })
+                    else:
+                        # new class
+                        variable_list.append(attr)
+                        class_dict[attr] = []
+                        for variable_name in dir(value):
+                            if not variable_name.startswith('_'):
+                                get_class_variable_value = eval("value.{0}".format(variable_name))
+                                if type(get_class_variable_value) in CLASS_SET:
+                                    class_dict[attr].append({
+                                            variable_name : get_class_variable_value
+                                    })
 
         new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         for variable in variable_list:
@@ -159,11 +207,14 @@ class ModifyClass():
                 for key, value in variable.items():
                     new_source += "{0} = {1}\n\n".format(key, value.__repr__())
 
+        # print(new_source)
+
         # format
         try:
             new_source = yapf.yapf_api.FormatCode(new_source)[0]
         except Exception as err:
-            raise err("Format Error! Please contact the author to submit this bug.")
+            print("Format Error! Please contact the author to submit this bug.")
+            raise err
 
         # print(new_source)
 
