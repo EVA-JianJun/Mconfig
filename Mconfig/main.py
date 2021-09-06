@@ -16,11 +16,11 @@ class ConfigManage(object):
         self._file = file
         self._file_name = file.replace(".py", "")
 
-        self._modify_core = ModifyClass(file)
-
         # 'init config file'
         if not os.path.isfile(file):
             shutil.copyfile(__file__.replace("main.py", 'mconfig.py'), file)
+
+        self._modify_core = ModifyClass(file)
 
         # 'import config(mudule)'
         # 'import self._file_name'

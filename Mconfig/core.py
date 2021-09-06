@@ -195,6 +195,9 @@ class ModifyClass():
             with open(self._config_file, 'w') as fw:
                 fw.write(source)
 
+            # update
+            self._config_file_modify_time = os.stat(self._config_file).st_mtime
+
         except Exception as err:
             print("Compilation failed! Please contact the author to submit this bug.")
             traceback.print_exc()
@@ -312,12 +315,11 @@ class ModifyClass():
                         print("{0} Reload config: {1}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self._config_file))
                         spec, source = self._get_source_code()
                         self._import(spec, source)
-                        # update
-                        self._config_file_modify_time = os.stat(self._config_file).st_mtime
                     except SyntaxError as err:
                         print("\033[0;36;41mReload config SyntaxError:\033[0m")
                         traceback.print_exc()
                         print(err)
+                        # update fix
                         self._config_file_modify_time = os.stat(self._config_file).st_mtime
                     finally:
                         self._setattr_lock.release()
