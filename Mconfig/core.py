@@ -57,7 +57,7 @@ class ModifyClass():
         for replace_str, class_name in class_list:
             source = source.replace(replace_str, "{0}(MconfigClass)".format(class_name))
         s_part_1, s_part_2 = source.split('\n', 1)
-        source = s_part_1 + "\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "del MconfigClass"
+        source = s_part_1 + "\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "\ndel MconfigClass"
         return source
 
     def _setattr(self,  attr: str, value, modify_class_name=None) -> None:
