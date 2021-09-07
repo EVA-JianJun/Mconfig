@@ -14,7 +14,7 @@ FIND_CLASS_NAME_PATTON = re.compile("\nclass\s+(.+?)\([object]*\):")
 FIND_CLASS_NAME_LINE_PATTON = re.compile("class\s+(.+?)\([object]*\):")
 FIND_VARIABLE_PATTON = re.compile("(.+)?\s+=")
 
-CLASS_SET = {int, float, str, bool, list, tuple, set, dict}
+CLASS_SET = {int, float, str, bool, list, tuple, set, dict, datetime}
 
 class MconfigClass(object):
 
@@ -60,7 +60,12 @@ class ModifyClass():
         for replace_str, class_name in class_list:
             source = source.replace(replace_str, "{0}(MconfigClass)".format(class_name))
         s_part_1, s_part_2 = source.split('\n', 1)
-        source = s_part_1 + "\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "\ndel MconfigClass"
+        if "datetime.datetime" in s_part_2:
+            # import datetime
+            source = s_part_1 + "\nimport datetime\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "\ndel datetime\ndel MconfigClass"
+        else:
+            # from datetime import datetime
+            source = s_part_1 + "\nfrom datetime import datetime\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "\ndel datetime\ndel MconfigClass"
         return source
 
     def _setattr(self,  attr: str, value, modify_class_name=None) -> None:
@@ -88,6 +93,10 @@ class ModifyClass():
         for line in  source.split('\n'):
             # find annotation
             if line.startswith('#') and not line.startswith('# Create Time:'):
+                variable_list.append(line)
+
+            # find import
+            if line.startswith('import') or line.startswith('from'):
                 variable_list.append(line)
 
             # find class
@@ -189,9 +198,12 @@ class ModifyClass():
                                     })
 
         new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        datetime_flag = False
         for variable in variable_list:
             if isinstance(variable, str):
-                if variable.startswith('#'):
+                if variable.startswith('#') or variable.startswith('import') or variable.startswith('from'):
+                    if variable == "from datetime import datetime":
+                        datetime_flag = True
                     new_source += variable + '\n'
                 else:
                     # class
@@ -200,13 +212,19 @@ class ModifyClass():
                     class_code = "class {0}():\n\n".format(class_name)
                     for variable_dict in class_variable_list:
                         for key, value in variable_dict.items():
-                            class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+                            if datetime_flag and isinstance(value, datetime):
+                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
+                            else:
+                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
 
                     new_source += class_code
 
             elif isinstance(variable, dict):
                 for key, value in variable.items():
-                    new_source += "{0} = {1}\n\n".format(key, value.__repr__())
+                    if datetime_flag and isinstance(value, datetime):
+                        new_source += "{0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
+                    else:
+                        new_source += "{0} = {1}\n\n".format(key, value.__repr__())
 
         # print(new_source)
 
@@ -286,6 +304,10 @@ class ModifyClass():
             if line.startswith('#') and not line.startswith('# Create Time:'):
                 variable_list.append(line)
 
+            # find import
+            if line.startswith('import') or line.startswith('from'):
+                variable_list.append(line)
+
             # find class
             class_name_list = FIND_CLASS_NAME_LINE_PATTON.findall(line)
             if class_name_list:
@@ -324,9 +346,12 @@ class ModifyClass():
                         })
 
         new_source = "# Create Time: {0}\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        datetime_flag = False
         for variable in variable_list:
             if isinstance(variable, str):
-                if variable.startswith('#'):
+                if variable.startswith('#') or variable.startswith('import') or variable.startswith('from'):
+                    if variable == "from datetime import datetime":
+                        datetime_flag = True
                     new_source += variable + '\n'
                 else:
                     # class
@@ -335,13 +360,19 @@ class ModifyClass():
                     class_code = "class {0}():\n\n".format(class_name)
                     for variable_dict in class_variable_list:
                         for key, value in variable_dict.items():
-                            class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+                            if datetime_flag and isinstance(value, datetime):
+                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
+                            else:
+                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
 
                     new_source += class_code
 
             elif isinstance(variable, dict):
                 for key, value in variable.items():
-                    new_source += "{0} = {1}\n\n".format(key, value.__repr__())
+                    if datetime_flag and isinstance(value, datetime):
+                        new_source += "{0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
+                    else:
+                        new_source += "{0} = {1}\n\n".format(key, value.__repr__())
 
         # format
         try:

@@ -39,7 +39,7 @@
 
 ![Mconfig][2]
 
-支持 **数字、字符串、布尔、列表、元组、集合、字典、自定义类** 数据类型.
+支持 **数字、字符串、布尔、列表、元组、集合、字典、datetime、自定义类** 数据类型.
 
 其中自定义类的使用相当于是为配置指定了一个域，不同类型的配置可以写在对应的自定义类里，不同类里的变量名可以重名.
 
@@ -163,10 +163,9 @@ yapf 0.31.0 https://pypi.org/project/yapf/ (不需要安装，已经集成)
 
 ## TODO
 
-* 对其他一些对象的支持
 * 进程锁支持
 * 分布式配置文件
 
 
   [1]: https://raw.githubusercontent.com/EVA-JianJun/GitPigBed/master/blog_files/img/Mconfig_0.png
-  [2]: https://raw.githubusercontent.com/EVA-JianJun/GitPigBed/master/blog_files/img/Mconfig_1.png
+  [2]: https://raw.githubusercontent.com/EVA-JianJun/GitPigBed/master/blog_files/img/Mconfig_2.png

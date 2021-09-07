@@ -1,6 +1,7 @@
 # Create Time: 2021-09-02 14:23:52
 # -*- coding: utf-8 -*-
 # config info write here
+from datetime import datetime
 # int or float
 M_num = 1
 
@@ -22,6 +23,8 @@ M_set = {1, 2, 3}
 # dict
 M_dict = {'a': 1, 'b': 2}
 
+# datetime
+M_date = datetime(1970, 1, 1)
 
 # class
 class M_SomeConfigClass_a():
