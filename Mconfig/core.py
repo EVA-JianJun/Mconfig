@@ -14,7 +14,7 @@ FIND_CLASS_NAME_PATTON = re.compile("\nclass\s+(.+?)\([object]*\):")
 FIND_CLASS_NAME_LINE_PATTON = re.compile("class\s+(.+?)\([object]*\):")
 FIND_VARIABLE_PATTON = re.compile("(.+)?\s+=")
 
-CLASS_SET = {int, float, str, bool, list, tuple, dict}
+CLASS_SET = {int, float, str, bool, list, tuple, set, dict}
 
 class MconfigClass(object):
 
@@ -39,7 +39,8 @@ class ModifyClass():
     def __init__(self, config_file: str) -> None:
 
         self._config_file = config_file
-        self._module_name = config_file.replace(".py", "")
+        _, all_file = os.path.split(self._config_file)
+        self._module_name = all_file.replace(".py", "")
 
         self._config_file_modify_time = os.stat(self._config_file).st_mtime
 
@@ -213,10 +214,9 @@ class ModifyClass():
         try:
             new_source = yapf.yapf_api.FormatCode(new_source)[0]
         except Exception as err:
+            print(new_source)
             print("Format Error! Please contact the author to submit this bug.")
             raise err
-
-        # print(new_source)
 
         return new_source
 
@@ -243,7 +243,7 @@ class ModifyClass():
             sys.modules[self._module_name] = module
 
             # save file
-            with open(self._config_file, 'w') as fw:
+            with open(self._config_file, 'w', encoding='utf-8') as fw:
                 fw.write(source)
 
             # update

@@ -14,13 +14,18 @@ class ConfigManage(object):
     def __init__(self, file="mconfig.py") -> None:
 
         self._file = file
-        self._file_name = file.replace(".py", "")
+
+        file_path, all_file = os.path.split(self._file)
+        if file_path:
+            sys.path.append(file_path)
+
+        self._file_name = all_file.replace(".py", "")
 
         # 'init config file'
         if not os.path.isfile(file):
             shutil.copyfile(__file__.replace("main.py", 'mconfig.py'), file)
 
-        self._modify_core = ModifyClass(file)
+        self._modify_core = ModifyClass(self._file)
 
         # 'import config(mudule)'
         # 'import self._file_name'
