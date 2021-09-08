@@ -92,8 +92,13 @@ class ModifyClass():
         modify_flag = False
         for line in  source.split('\n'):
             # find annotation
-            if line.startswith('#') and not line.startswith('# Create Time:'):
-                variable_list.append(line)
+            if line.strip().startswith('#') and not line.startswith('# Create Time:'):
+                if len(line.strip()) < len(line):
+                    class_dict[class_name].append({
+                                    "Remark" : line
+                                })
+                else:
+                    variable_list.append(line)
 
             # find import
             if line.startswith('import') or line.startswith('from'):
@@ -215,7 +220,10 @@ class ModifyClass():
                             if datetime_flag and isinstance(value, datetime):
                                 class_code += "    {0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
                             else:
-                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+                                if key == "Remark":
+                                    class_code += value + '\n'
+                                else:
+                                    class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
 
                     new_source += class_code
 
@@ -301,8 +309,13 @@ class ModifyClass():
         class_dict = {}
         for line in  source.split('\n'):
             # find annotation
-            if line.startswith('#') and not line.startswith('# Create Time:'):
-                variable_list.append(line)
+            if line.strip().startswith('#') and not line.startswith('# Create Time:'):
+                if len(line.strip()) < len(line):
+                    class_dict[class_name].append({
+                                    "Remark" : line
+                                })
+                else:
+                    variable_list.append(line)
 
             # find import
             if line.startswith('import') or line.startswith('from'):
@@ -363,7 +376,10 @@ class ModifyClass():
                             if datetime_flag and isinstance(value, datetime):
                                 class_code += "    {0} = {1}\n\n".format(key, value.__repr__().replace("datetime.datetime", "datetime"))
                             else:
-                                class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
+                                if key == "Remark":
+                                    class_code += value + '\n'
+                                else:
+                                    class_code += "    {0} = {1}\n\n".format(key, value.__repr__())
 
                     new_source += class_code
 
