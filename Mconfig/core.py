@@ -36,9 +36,10 @@ class MconfigClass(object):
 class ModifyClass():
     """ Modify config and Save config """
 
-    def __init__(self, config_file: str) -> None:
+    def __init__(self, config_file: str, manage: object) -> None:
 
         self._config_file = config_file
+        self.manage = manage
         _, all_file = os.path.split(self._config_file)
         self._module_name = all_file.replace(".py", "")
 
@@ -413,6 +414,7 @@ class ModifyClass():
                         print("{0} Reload config: {1}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), self._config_file))
                         spec, source = self._get_source_code()
                         self._import(spec, source)
+                        self.manage.processing(self.manage.processing_func)
                     except SyntaxError as err:
                         print("\033[0;36;41mReload config SyntaxError:\033[0m")
                         traceback.print_exc()

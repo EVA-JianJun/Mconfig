@@ -27,7 +27,7 @@ class ConfigManage(object):
         if not os.path.isfile(file):
             shutil.copyfile(__file__.replace("main.py", 'mconfig.py'), file)
 
-        self._modify_core = ModifyClass(self._file)
+        self._modify_core = ModifyClass(self._file, self)
 
         self.processing_func = processing_func
 
