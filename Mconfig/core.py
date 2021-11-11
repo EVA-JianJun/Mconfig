@@ -407,6 +407,7 @@ class ModifyClass():
             while True:
                 time.sleep(5)
                 if os.stat(self._config_file).st_mtime != self._config_file_modify_time:
+                    # print(os.stat(self._config_file).st_mtime, self._config_file_modify_time)
                     # reload
                     # DEBUG
                     self._setattr_lock.acquire()
@@ -419,9 +420,11 @@ class ModifyClass():
                         print("\033[0;36;41mReload config SyntaxError:\033[0m")
                         traceback.print_exc()
                         print(err)
-                        # update fix
-                        self._config_file_modify_time = os.stat(self._config_file).st_mtime
                     finally:
+                        # update fix
+                        time.sleep(3)
+                        self._config_file_modify_time = os.stat(self._config_file).st_mtime
+                        # print("_config_file_modify_time:", self._config_file_modify_time)
                         self._setattr_lock.release()
 
         self._setattr_lock.acquire()

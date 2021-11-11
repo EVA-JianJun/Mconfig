@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fd:
 
 setup(
     name = 'Mconfig',
-    version = '1.1.2',
+    version = '1.1.3',
     author = 'jianjun',
     author_email = '910667956@qq.com',
     url = 'https://github.com/EVA-JianJun/Mconfig',
