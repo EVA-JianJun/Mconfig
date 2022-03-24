@@ -100,6 +100,7 @@ class ModifyClass():
                                 })
                 else:
                     variable_list.append(line)
+                continue
 
             # find import
             if line.startswith('import') or line.startswith('from'):
@@ -317,6 +318,7 @@ class ModifyClass():
                                 })
                 else:
                     variable_list.append(line)
+                continue
 
             # find import
             if line.startswith('import') or line.startswith('from'):
