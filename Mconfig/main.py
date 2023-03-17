@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import time
 import shutil
 import traceback
 import importlib
@@ -25,7 +26,12 @@ class ConfigManage(object):
 
         # 'init config file'
         if not os.path.isfile(file):
-            shutil.copyfile(__file__.replace("main.py", 'mconfig.py'), file)
+            if file == "mconfig.py":
+                # default
+                shutil.copyfile(__file__.replace("main.py", 'mconfig.py'), file)
+            else:
+                with open(file, "w", encoding="utf-8") as fw:
+                    fw.write("# Create Time: {0}\n".format(time.strftime('%Y-%m-%d %H:%M:%S')))
 
         self._modify_core = ModifyClass(self._file, self)
 

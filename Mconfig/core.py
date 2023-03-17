@@ -57,9 +57,12 @@ class ModifyClass():
 
     def _wapper_class(self, source: str) -> str:
         """ overwrite class """
+        # inheritance MconfigClass
         class_list = FIND_CLASS_PATTON.findall(source)
         for replace_str, class_name in class_list:
             source = source.replace(replace_str, "{0}(MconfigClass)".format(class_name))
+
+        # add datetime
         s_part_1, s_part_2 = source.split('\n', 1)
         if "datetime.datetime" in s_part_2:
             # import datetime
@@ -67,6 +70,7 @@ class ModifyClass():
         else:
             # from datetime import datetime
             source = s_part_1 + "\nfrom datetime import datetime\nfrom Mconfig.core import MconfigClass\n" + s_part_2 + "\ndel datetime\ndel MconfigClass"
+
         return source
 
     def _setattr(self,  attr: str, value, modify_class_name=None) -> None:
