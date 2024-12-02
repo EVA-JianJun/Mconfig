@@ -1,5 +1,12 @@
 # Mconfig - ModifyConfig
 
+这个项目是我早期突发奇想写的项目, 正常情况下可以正常使用, 但是可能会遇到各种各样的问题, 且 Mconfig 这种方式的配置文件也有它的问题和局限性, 所以不推荐在生产环境中使用, 推荐使用 yaml, TOML 等更现代的配置文件, 或者 json 等传统的配置文件.
+
+This project is my early whim to write the project, under normal circumstances can be used normally, but may encounter a variety of problems, and Mconfig this way of configuration file also has its own problems and limitations, so do not recommend the use of production environments, it is recommended that the use of yaml, TOML, and other more modern configuration files, or json and other traditional configuration files.
+
+Translated with DeepL.com (free version)
+
+
 **.py 配置文件！Python最好用的配置文件！**
 
 用完 Mconfig 后，感觉以前用的什么 yaml、ini、toml、json 之类的配置文件格式都是垃圾.
