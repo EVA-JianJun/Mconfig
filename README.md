@@ -4,9 +4,6 @@
 
 This project is my early whim to write the project, under normal circumstances can be used normally, but may encounter a variety of problems, and Mconfig this way of configuration file also has its own problems and limitations, so do not recommend the use of production environments, it is recommended that the use of yaml, TOML, and other more modern configuration files, or json and other traditional configuration files.
 
-Translated with DeepL.com (free version)
-
-
 **.py 配置文件！Python最好用的配置文件！**
 
 用完 Mconfig 后，感觉以前用的什么 yaml、ini、toml、json 之类的配置文件格式都是垃圾.
