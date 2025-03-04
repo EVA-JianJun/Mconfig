@@ -4,22 +4,24 @@
 
 This project is my early whim to write the project, under normal circumstances can be used normally, but may encounter a variety of problems, and Mconfig this way of configuration file also has its own problems and limitations, so do not recommend the use of production environments, it is recommended that the use of yaml, TOML, and other more modern configuration files, or json and other traditional configuration files.
 
+---
+
 **.py 配置文件！Python最好用的配置文件！**
 
-用完 Mconfig 后，感觉以前用的什么 yaml、ini、toml、json 之类的配置文件格式都是垃圾.
+Mconfig 是基于 Python 的特性而研发的全新形式的配置文件, 和传统的配置文件如 yaml、ini、toml、json 等有很大的不同.
 
 传统的配置文件有这么几个问题：
 
 * 不易修改：导入前就得提前设定好，不能在程序运行中修改配置文件或者修改特别麻烦.
 * 读写风险：同时读写配置造成配置混乱或系统异常.
 * 差异化大：一种格式对应一个包，导入进来各种花里胡哨的功能，函数一堆，参数一堆，实际能用到的不多.
-* 学习成本：学习成本其实也不多，就额外花点时间学下语法格式，看下数据转换存储，再花点时间看看对应包的使用.
+* 学习成本：对应每种配置文件都需要学习特定的语法, 特定的类型等.
 
-`Mconfig` 解决了上面所有的问题，又对功能做了极大的加强！不是说加了很多函数需要你来学习.
+`Mconfig` 解决了上面所有的问题，又对功能做了极大的加强！这里说的加强不是说加了很多函数需要你来学习.
 
-**它没有任何函数，没有任何方法，没有任何属性，只有Python语法！**
+**Mconfig 没有任何函数，没有任何方法，没有任何属性，只有Python语法！**
 
-让你用着爽，什么都不用管，像写Python一样使用配置文件！
+让你用着爽，什么都不用管，像写 Python 代码一样使用配置文件！
 
 ## 安装
 
@@ -41,9 +43,9 @@ This project is my early whim to write the project, under normal circumstances c
 
 配置文件默认为 mconfig.py ，如果不存在会在当前目录下新建默认的 mconfig.py 配置文件：
 
-![Mconfig][2]
-
 **设置成其他文件名且配置文件不存在时创建空文件.**
+
+![Mconfig][2]
 
 支持 **数字、字符串、布尔、列表、元组、集合、字典、时间、自定义类** 数据类型.
 
@@ -51,9 +53,9 @@ This project is my early whim to write the project, under normal circumstances c
 
 也可以手动为Mconfig指定一个配置文件路径作为参数：
 
-    mc = Mconfig("myconfig.py")
+    mc_1 = Mconfig("myconfig.py")
 
-    mc_2 = Mconfig("config/mconfig.py")
+    mc_2 = Mconfig("config/config.py")
 
 ## 增删改查
 
@@ -137,11 +139,11 @@ This project is my early whim to write the project, under normal circumstances c
 * 用户修改 mconfig.py 后会自动同步所有的 mc 对象.
 * 任意的 mc 对象的改变会自动修改 mconfig.py 源文件.
 
-**无论创建了几个 mc 实例，只要 mc 使用的配置文件一致，当任意配置发生改变，所有的 mc 的配置信息会自动进行同步，并同步修改源文件，所有的 mc 对象指向同一个地址.**
+**只要 mc 使用的配置文件一致，那么所有的 mc 实例对象都为同一个对象, 当任意配置发生改变，所有的 mc 实例的配置信息会自动进行同步，并同步修改源文件，所有的 mc 对象指向同一个地址.**
 
 ## 更新
 
-# V1.1.0
+### v1.1.0
 
 增加一个用户自定义加工变量的功能，有时候用户需要的变量需要从原始变量加工成其他的.
 
@@ -176,7 +178,7 @@ This project is my early whim to write the project, under normal circumstances c
     不可以这样:
 
         mc_1 = Mconfig("path1/mconfig.py")
-        mc_2 = Mconfig("path1/mconfig.py")
+        mc_2 = Mconfig("path2/mconfig.py")
 
     请使用不同的文件名，或者把所有的配置写在同一个配置文件下
 
